@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Animales</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            margin: 0 0 20px;
+            font-size: 24px;
+            color: #333;
+        }
+
+        h2 {
+            margin: 20px 0 10px;
+            font-size: 20px;
+            color: #555;
+        }
+
+        input,
+        button {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            width: calc(100% - 22px);
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .results {
+            margin-top: 20px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px 0;
+            padding: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Registro de Animales</h1>
+
+        <div>
+            <h2>Registrar Animal</h2>
+            <input type="text" id="registerName" placeholder="Nombre del Animal" />
+            <input type="text" id="registerType" placeholder="Tipo de Animal" />
+            <button onclick="registerAnimal()">Registrar</button>
+        </div>
+
+        <div>
+            <h2>Consultar Animales</h2>
+            <input type="text" id="searchName" placeholder="Nombre del Animal" />
+            <input type="text" id="searchType" placeholder="Tipo de Animal" />
+            <button onclick="getAnimals()">Consultar</button>
+            <div id="results" class="results"></div>
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = 'https://7ygod22y7bdhb7uqs2udvi5ab40gtgpm.lambda-url.us-east-1.on.aws/';
+
+        async function registerAnimal() {
+            const name = document.getElementById('registerName').value;
+            const type = document.getElementById('registerType').value;
+
+            if (!name || !type) {
+                alert('Por favor, complete ambos campos.');
+                return;
+            }
+
+            const animal = { name, type };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(animal)
+                });
+
+                if (response.ok) {
+                    alert('Animal registrado exitosamente.');
+                    document.getElementById('registerName').value = '';
+                    document.getElementById('registerType').value = '';
+                } else {
+                    alert('Error al registrar el animal.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al conectar con la API.');
+            }
+        }
+
+        async function getAnimals() {
+            const name = document.getElementById('searchName').value;
+            const type = document.getElementById('searchType').value;
+
+            let query = apiUrl;
+            if (name || type) {
+                query += '?';
+                if (name) {
+                    query += `name=${name}&`;
+                }
+                if (type) {
+                    query += `type=${type}&`;
+                }
+                query = query.slice(0, -1); // Remove trailing '&' or '?' if any
+            }
+
+            try {
+                const response = await fetch(query);
+
+                if (response.ok) {
+                    const animals = await response.json();
+                    displayAnimals(animals);
+                } else {
+                    alert('Error al consultar los animales.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al conectar con la API.');
+            }
+        }
+
+        function displayAnimals(animals) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            if (animals.length === 0) {
+                resultsDiv.innerHTML = '<p>No hay animales registrados.</p>';
+                return;
+            }
+
+            const list = document.createElement('ul');
+
+            animals.forEach(animal => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `Nombre: ${animal.name}, Tipo: ${animal.type}`;
+                list.appendChild(listItem);
+            });
+
+            resultsDiv.appendChild(list);
+        }
+    </script>
+</body>
+
+</html>
